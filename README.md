@@ -45,10 +45,6 @@ Hello, how can I help you today?
 - Clipboard API for text insertion
 - Chrome Storage API for profiles
 
-## Author
-
-Lucas Moura (github.com/lucasmoura333)
-
 ## License
 
 MIT License - see LICENSE file for details
