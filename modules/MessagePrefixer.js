@@ -44,12 +44,24 @@ window.MessagePrefixer = {
       input.focus();
       document.execCommand('selectAll');
       document.execCommand('paste');
+      
+      // Aguarda o paste ser processado e clica no botão
       setTimeout(() => {
-        const btn = document.querySelector('[data-testid="send"]');
-        if (btn) btn.click();
+        const btn = document.querySelector('[data-testid="send"]') || 
+                    document.querySelector('[aria-label="Send"]') ||
+                    document.querySelector('button[aria-label="Enviar"]');
+        
+        if (btn) {
+          btn.click();
+          console.log('✅ MessagePrefixer: mensagem enviada');
+        } else {
+          console.warn('⚠️ MessagePrefixer: botão send não encontrado');
+        }
+        
         this.processing = false;
-      }, 50);
-    }).catch(() => {
+      }, 100); // aumentado para 100ms
+    }).catch((err) => {
+      console.error('❌ MessagePrefixer: erro no clipboard', err);
       this.processing = false;
     });
   },
