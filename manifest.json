@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "WhatsApp Multi-Profile Agent Identifier",
+  "version": "3.0.0",
+  "description": "Identify support agents on WhatsApp Web - by Lucas Moura",
+  "author": "Lucas Moura",
+  "permissions": ["storage", "activeTab", "scripting", "clipboardRead", "clipboardWrite"],
+  "host_permissions": ["https://web.whatsapp.com/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Agent Profile Manager"
+  },
+  "content_scripts": [{
+    "matches": ["https://web.whatsapp.com/*"],
+    "js": ["modules/settings.js", "modules/DOMHelper.js", "modules/ActivityLogger.js", "modules/BannerManager.js", "modules/NameReplacer.js", "modules/MessagePrefixer.js", "content.js"],
+    "css": ["style.css"],
+    "run_at": "document_end"
+  }],
+    "icons": {
+    "16": "icons/1.png",
+    "48": "icons/2.png",
+    "128": "icons/3.png"
+  }
+}
