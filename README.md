@@ -1,50 +1,55 @@
-# Agent Extension
+# WhatsApp Agent
 
-WhatsApp Web extension that automatically adds agent prefixes to outgoing messages, making them appear in bold to recipients.
+Extensão para WhatsApp Web que adiciona automaticamente prefixos de identificação às mensagens enviadas.
 
-## Features
+## Autores
 
-- **Message Prefixing**: Automatically adds `*Name - Subtitle:*` prefix to all outgoing messages
-- **Bold Formatting**: Recipients see the prefix in bold text
-- **Line Break**: Message content appears on a new line below the prefix
-- **Profile Management**: Create and switch between different agent profiles
-- **Clipboard Integration**: Bypasses WhatsApp's Lexical Editor for reliable formatting
+- **Lucas Moura** - [@lucasmoura333](https://github.com/lucasmoura333)
+- **Marcus Vinicius** - [@mvfernandes](https://github.com/mvfernandes)
 
-## Installation
+## Funcionalidades
 
-1. Download or clone this repository
-2. Open Chrome and go to `chrome://extensions/`
-3. Enable "Developer mode" (top right)
-4. Click "Load unpacked" and select the `whatsapp-extension` folder
-5. Open WhatsApp Web and click the extension icon
+- **Prefixo Automático**: Adiciona `*Nome - Subtítulo:*` às mensagens
+- **Formatação Bold**: Destinatários veem o prefixo em negrito
+- **Envio Invisível**: O usuário não vê o prefixo sendo inserido
+- **Múltiplos Perfis**: Crie e alterne entre diferentes perfis de agente
+- **Ativar/Desativar**: Controle total via popup da extensão
 
-## Usage
+## Instalação
 
-1. Click the extension icon in WhatsApp Web
-2. Create a new profile (e.g., "Lucas - GDPro Dev")
-3. Activate the profile
-4. Start chatting — all messages will be prefixed automatically
+1. Clone ou baixe este repositório
+2. Acesse `chrome://extensions/` no Chrome
+3. Ative o "Modo do desenvolvedor" (canto superior direito)
+4. Clique em "Carregar sem compactação" e selecione a pasta `whatsapp-extension`
+5. Abra o WhatsApp Web e clique no ícone da extensão
 
-## Example
+## Uso
 
-**Sent Message:**
+1. Clique no ícone da extensão no WhatsApp Web
+2. Crie um novo perfil (ex: "Suporte - Turno Manhã")
+3. Ative o perfil
+4. Comece a conversar — todas as mensagens serão prefixadas automaticamente!
+
+## Exemplo
+
+**Você digita:**
 ```
-Hello, how can I help you today?
+Olá, como posso ajudar?
 ```
 
-**Recipient Sees:**
+**Destinatário recebe:**
 ```
-*Lucas - GDPro Dev:*
-Hello, how can I help you today?
+*Suporte - Turno Manhã:*
+Olá, como posso ajudar?
 ```
 
-## Development
+## Tecnologias
 
-- Built with Manifest V3
-- Uses capture-phase event interception
-- Clipboard API for text insertion
-- Chrome Storage API for profiles
+- Manifest V3
+- Chrome Storage API
+- Clipboard API
+- MutationObserver
 
-## License
+## Licença
 
-MIT License - see LICENSE file for details
+MIT License - veja o arquivo LICENSE para detalhes

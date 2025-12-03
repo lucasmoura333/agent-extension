@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "WhatsApp Multi-Profile Agent Identifier",
-  "version": "3.0.0",
-  "description": "Identify support agents on WhatsApp Web - by Lucas Moura",
-  "author": "Lucas Moura",
+  "name": "WhatsApp Agent",
+  "version": "1.0.0",
+  "description": "Prefixo automático para identificação de agentes no WhatsApp Web",
+  "author": "Lucas Moura & Marcus Vinicius",
   "permissions": ["storage", "activeTab", "scripting", "clipboardRead", "clipboardWrite"],
   "host_permissions": ["https://web.whatsapp.com/*"],
   "action": {

@@ -1,19 +1,14 @@
 window.DOMHelper = {
+  DEBUG: false, // 🔧 Mude para true para ativar logs
+
   async waitForWhatsApp() {
-    console.log('[DOMHelper] Aguardando WhatsApp carregar...');
     for (let i = 0; i < 100; i++) {
-      // Só precisa do #app ou #main para saber que o WhatsApp carregou
       const app = document.querySelector('#app');
       const main = document.querySelector('#main');
       const side = document.querySelector('#side');
       
       if (app && (main || side)) {
-        console.log(`[DOMHelper] WhatsApp carregado após ${i * 200}ms`);
         return true;
-      }
-      
-      if (i % 10 === 0) {
-        console.log(`[DOMHelper] Tentativa ${i}/100...`);
       }
       
       await new Promise(r => setTimeout(r, 200));
