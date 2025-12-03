@@ -122,7 +122,7 @@ window.MessagePrefixer = {
 
   // ============ INVISIBLE SEND ============
   sendInvisibly(input, text) {
-    const fullText = `${this.hiddenPrefix}\n\n${text}`;
+    const fullText = `${this.hiddenPrefix}\n${text}`;
     
     // 1. Esconde texto (transparente)
     const originalColor = input.style.color;
