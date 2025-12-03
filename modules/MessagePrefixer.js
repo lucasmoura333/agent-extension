@@ -1,133 +1,291 @@
-// MessagePrefixer V5 - by Lucas Moura (Input Modification Approach)
+// MessagePrefixer V7 - by Lucas Moura (Invisible Prefix)
 console.log('🔵 MessagePrefixer.js carregado!');
 
 window.MessagePrefixer = {
   isActive: false,
   activeProfile: null,
-  listenerAttached: false,
+  observer: null,
+  hiddenPrefix: null,
 
   start(profile) {
-    console.log('🚀 MessagePrefixer.start() para:', profile.profileName);
-    console.log('📊 Estado atual - isActive:', this.isActive, 'listenerAttached:', this.listenerAttached);
-    
-    this.isActive = true;
+    console.log('🚀 MessagePrefixer.start() chamado para:', profile.profileName);
+
     this.activeProfile = profile;
-    
-    if (!this.listenerAttached) {
-      console.log('🔧 Configurando listener pela primeira vez...');
-      this.setupListener();
-      this.listenerAttached = true;
-    } else {
-      console.log('ℹ️ Listener já estava configurado');
+    this.isActive = true;
+
+    // Remove listener antigo se existir
+    if (this.observer) {
+      this.observer.disconnect();
     }
-    
-    console.log('✅ MessagePrefixer ativo - Profile:', profile.profileName, 'Subtitle:', profile.subtitle);
+
+    this.setupObserver();
+    console.log('✅ MessagePrefixer ativo:', this.isActive);
   },
 
   stop() {
-    console.log('⏹️ MessagePrefixer.stop()');
     this.isActive = false;
     this.activeProfile = null;
+    this.hiddenPrefix = null;
+    if (this.observer) {
+      this.observer.disconnect();
+      this.observer = null;
+    }
+    console.log('⏹️ MessagePrefixer parado');
   },
 
-  setupListener() {
-    console.log('🎧 MessagePrefixer: configurando listener');
-    
-    // Interceptar ANTES do WhatsApp processar o Enter
+  setupObserver() {
+    console.log('🔍 Configurando MutationObserver para detectar novos inputs');
+
+    // DEBUG: Adiciona listener global para capturar todos os keydown
     document.addEventListener('keydown', (e) => {
-      console.log('⌨️ Key detectada:', e.key, 'isActive:', this.isActive);
-      
-      if (!this.isActive) {
-        console.log('⏭️ Ignorando - não está ativo');
+      if (e.key === 'Enter') {
+        console.log('🌍 GLOBAL KEYDOWN Enter detectado!');
+        console.log('🌍 Target:', e.target);
+        console.log('🌍 Target details:', {
+          tagName: e.target.tagName,
+          contentEditable: e.target.contentEditable,
+          dataTab: e.target.getAttribute('data-tab'),
+          dataTestId: e.target.getAttribute('data-testid'),
+          role: e.target.getAttribute('role'),
+          className: e.target.className
+        });
+      }
+    }, true);
+
+    // DEBUG: Adiciona listener global para focus
+    document.addEventListener('focus', (e) => {
+      if (e.target.contentEditable === 'true') {
+        console.log('🌍 GLOBAL FOCUS em elemento editável!');
+        console.log('🌍 Focus target:', e.target);
+        console.log('🌍 Focus target details:', {
+          tagName: e.target.tagName,
+          contentEditable: e.target.contentEditable,
+          dataTab: e.target.getAttribute('data-tab'),
+          dataTestId: e.target.getAttribute('data-testid'),
+          role: e.target.getAttribute('role'),
+          className: e.target.className
+        });
+      }
+    }, true);
+
+    // Observa mudanças no DOM para detectar quando o input aparece
+    this.observer = new MutationObserver(() => {
+      const input = this.findInput();
+      if (input && !input.hasAttribute('data-prefix-ready')) {
+        console.log('🎯 NOVO INPUT DE MENSAGEM DETECTADO!');
+        input.setAttribute('data-prefix-ready', 'true');
+        this.attachToInput(input);
+      }
+    });
+
+    this.observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    // Checa se já existe um input
+    const input = this.findInput();
+    if (input) {
+      console.log('🎯 INPUT DE MENSAGEM JÁ EXISTE!');
+      input.setAttribute('data-prefix-ready', 'true');
+      this.attachToInput(input);
+    } else {
+      console.log('⏳ Aguardando input de mensagem aparecer...');
+    }
+  },
+
+  attachToInput(input) {
+    console.log('📎 Anexando listeners ao input');
+    console.log('🎯 Input element:', input);
+    console.log('🎯 Input attributes:', {
+      contenteditable: input.getAttribute('contenteditable'),
+      'data-tab': input.getAttribute('data-tab'),
+      'data-testid': input.getAttribute('data-testid'),
+      role: input.getAttribute('role'),
+      class: input.className
+    });
+
+    // Verifica se é realmente um input editável
+    if (input.contentEditable !== 'true') {
+      console.log('⚠️ AVISO: Input não é contenteditable!');
+      return;
+    }
+
+    // Listener para FOCUS - configura prefixo invisível
+    input.addEventListener('focus', (e) => {
+      console.log('🎯 FOCUS EVENTO ACIONADO!');
+      console.log('🎯 Focus target:', e.target);
+      console.log('🎯 Focus target is input:', e.target === input);
+
+      if (!this.isActive || !this.activeProfile) {
+        console.log('⏭️ Ignorado - extensão inativa');
         return;
       }
-      
-      // Detectar Enter (não Shift+Enter)
+
+      const text = (input.textContent || '').trim();
+      console.log('📝 Texto atual no focus:', `"${text}"`);
+
+      if (!text) {
+        const name = this.activeProfile.profileName || 'Agent';
+        const sub = this.activeProfile.subtitle || '';
+        const prefix = sub ? `*${name} - ${sub}:*` : `*${name}:*`;
+
+        // Guarda o prefixo mas não mostra
+        this.hiddenPrefix = prefix;
+
+        // Adiciona atributo indicando que tem prefixo oculto
+        input.setAttribute('data-has-hidden-prefix', 'true');
+
+        console.log('✅ Prefixo oculto configurado:', `"${this.hiddenPrefix}"`);
+        console.log('🏷️ Atributo data-has-hidden-prefix adicionado');
+      } else {
+        console.log('⏭️ Campo não está vazio, não configurando prefixo');
+      }
+    });
+
+    // Abordagem: bloqueia Enter, modifica via clipboard, e reenvia
+    input.addEventListener('keydown', (e) => {
+      console.log('⌨️ KEYDOWN EVENTO ACIONADO:', e.key);
+      console.log('⌨️ Keydown target is input:', e.target === input);
+
+      if (!this.isActive || !this.activeProfile) {
+        console.log('⏭️ Ignorado - extensão inativa');
+        return;
+      }
+
       if (e.key === 'Enter' && !e.shiftKey) {
-        console.log('✅ Enter detectado (sem Shift)');
-        const input = this.findInput();
-        console.log('🔍 Input encontrado:', !!input);
-        
-        if (input && input.contains(e.target)) {
-          console.log('✅ Target está dentro do input');
-          const text = (input.textContent || '').trim();
-          console.log('📝 Texto capturado:', text);
-          
-          const hasPrefix = this.hasPrefix(text);
-          console.log('🏷️ Já tem prefixo?', hasPrefix);
-          
-          // Se tem texto e não tem prefixo, adicionar
-          if (text && !hasPrefix) {
-            console.log('🎯 BLOQUEANDO Enter e inserindo prefixo');
+        console.log('✅ Enter pressionado');
+
+        if (this.hiddenPrefix && input.hasAttribute('data-has-hidden-prefix')) {
+          const currentText = (input.textContent || '').trim();
+          console.log('📝 Texto atual:', `"${currentText}"`);
+
+          if (currentText && !this.hasPrefix(currentText)) {
+            console.log('⚡ BLOQUEANDO Enter - ENVIO 100% INVISÍVEL');
+            
+            // BLOQUEIA o Enter original
             e.preventDefault();
+            e.stopPropagation();
             e.stopImmediatePropagation();
-            this.send(input, text);
+
+            const fullText = `${this.hiddenPrefix}\n\n${currentText}`;
+            
+            // ========== ENVIO 100% INVISÍVEL ==========
+            // 1. Esconde o input COMPLETAMENTE (cor do texto = transparente)
+            const originalColor = input.style.color;
+            const originalCaretColor = input.style.caretColor;
+            input.style.color = 'transparent';
+            input.style.caretColor = 'transparent';
+            
+            // 2. Modifica e envia instantaneamente
+            navigator.clipboard.writeText(fullText).then(() => {
+              input.focus();
+              document.execCommand('selectAll');
+              document.execCommand('paste');
+              
+              // 3. Clica no botão send IMEDIATAMENTE
+              requestAnimationFrame(() => {
+                const sendBtn = document.querySelector('[data-testid="send"]') ||
+                                document.querySelector('button[aria-label="Send"]') ||
+                                document.querySelector('button[aria-label="Enviar"]') ||
+                                document.querySelector('span[data-icon="send"]')?.closest('button');
+                
+                if (sendBtn) {
+                  sendBtn.click();
+                  console.log('✅ Enviado INVISIVELMENTE!');
+                }
+                
+                // 4. Restaura cor (o input já vai estar vazio após envio)
+                setTimeout(() => {
+                  input.style.color = originalColor;
+                  input.style.caretColor = originalCaretColor;
+                }, 10);
+              });
+              
+              // Limpa estado
+              this.hiddenPrefix = null;
+              input.removeAttribute('data-has-hidden-prefix');
+            });
+            // ==========================================
+
             return false;
           } else {
-            console.log('⏭️ Pulando - texto vazio ou já tem prefixo');
+            console.log('⏭️ Texto vazio ou já tem prefixo');
           }
         } else {
-          console.log('⏭️ Target não está no input ou input não encontrado');
+          console.log('⏭️ Sem prefixo oculto');
         }
       }
-    }, true); // Capture phase para pegar antes do WhatsApp
-    
-    console.log('✅ Listener configurado');
-  },
+    }, true); // Capture phase
 
-  send(input, text) {
-    this.processing = true;
-    const name = this.activeProfile?.profileName || 'Agent';
-    const sub = this.activeProfile?.subtitle || '';
-    const prefix = sub ? `*${name} - ${sub}:*` : `*${name}:*`;
-    const msg = `${prefix}\n${text}`;
-    
-    console.log('📋 Copiando para clipboard:', msg);
-    
-    navigator.clipboard.writeText(msg).then(() => {
-      console.log('✅ Clipboard atualizado');
-      input.focus();
-      document.execCommand('selectAll');
-      document.execCommand('paste');
-      console.log('✅ Paste executado');
-      
-      // Aguarda o paste ser processado e clica no botão
-      setTimeout(() => {
-        const btn = document.querySelector('[data-testid="send"]') || 
-                    document.querySelector('button[aria-label="Send"]') ||
-                    document.querySelector('button[aria-label="Enviar"]') ||
-                    document.querySelector('span[data-icon="send"]')?.parentElement;
-        
-        console.log('🔍 Botão send encontrado:', !!btn);
-        
-        if (btn) {
-          btn.click();
-          console.log('✅ Mensagem enviada!');
-        } else {
-          console.warn('⚠️ Botão send não encontrado - enviando Enter manualmente');
-          input.dispatchEvent(new KeyboardEvent('keydown', {
-            key: 'Enter',
-            code: 'Enter',
-            keyCode: 13,
-            which: 13,
-            bubbles: true
-          }));
+    console.log('✅ Listeners anexados com sucesso');
+
+    // Teste: adiciona um listener global para verificar se eventos estão chegando
+    document.addEventListener('keydown', (e) => {
+      if (e.target === input) {
+        console.log('🌍 DOCUMENT KEYDOWN: target é o input correto');
+      }
+    });
+
+    // Listener para BLUR - limpa prefixo oculto se sair sem enviar
+    input.addEventListener('blur', () => {
+      console.log('👋 BLUR EVENTO ACIONADO');
+      if (input.hasAttribute('data-has-hidden-prefix')) {
+        const text = (input.textContent || '').trim();
+        if (!text) {
+          this.hiddenPrefix = null;
+          input.removeAttribute('data-has-hidden-prefix');
+          console.log('🧹 Prefixo oculto limpo (blur sem texto)');
         }
-        
-        this.processing = false;
-      }, 150);
-    }).catch((err) => {
-      console.error('❌ Erro no clipboard:', err);
-      this.processing = false;
+      }
     });
   },
 
   findInput() {
-    return document.querySelector('div[contenteditable="true"][data-tab="10"]');
+    // IMPORTANTE: data-tab="10" é o campo de mensagem
+    // data-tab="3" é o campo de pesquisa (NÃO queremos esse!)
+    const selectors = [
+      'div[contenteditable="true"][data-tab="10"]', // Campo de mensagem - PRIORIDADE!
+      '[data-testid="conversation-compose-box-input"]',
+      'footer div[contenteditable="true"][role="textbox"]'
+    ];
+
+    for (const selector of selectors) {
+      const input = document.querySelector(selector);
+      if (input) {
+        console.log('🔍 Input encontrado com selector:', selector);
+        console.log('📍 Input details:', {
+          tagName: input.tagName,
+          contentEditable: input.contentEditable,
+          dataTab: input.getAttribute('data-tab'),
+          dataTestId: input.getAttribute('data-testid'),
+          role: input.getAttribute('role'),
+          ariaLabel: input.getAttribute('aria-label')
+        });
+        return input;
+      }
+    }
+
+    console.log('🔍 Nenhum input de mensagem encontrado');
+    return null;
+  },
+
+  getSelectorUsed(element, selectors) {
+    for (const selector of selectors) {
+      try {
+        if (element.matches && element.matches(selector)) {
+          return selector;
+        }
+      } catch (e) {
+        // Ignora seletores inválidos
+      }
+    }
+    return 'unknown';
   },
 
   hasPrefix(text) {
-    const name = this.activeProfile?.profileName;
-    return name && text.startsWith(`*${name}`);
+    if (!this.activeProfile) return false;
+    const name = this.activeProfile.profileName;
+    return text.startsWith(`*${name}`);
   }
 };
